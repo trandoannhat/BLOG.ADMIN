@@ -19,6 +19,8 @@ jobs:
 
       - name: Install dependencies and Build
         run: |
+          # Xóa package-lock.json để ép npm tải đúng bản Rollup cho Linux
+          rm -f package-lock.json
           npm install
           npm run build
 
