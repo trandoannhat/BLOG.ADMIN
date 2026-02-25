@@ -1,0 +1,264 @@
+// https://nhatdev.top
+// src/pages/Categories/index.tsx
+import { useEffect, useState } from "react";
+import {
+  Table,
+  Button,
+  Space,
+  Popconfirm,
+  message,
+  Card,
+  Input,
+  //Tooltip,
+  Row,
+  Col,
+} from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  // SearchOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import categoryApi from "../../api/categoryApi";
+import type {
+  CategoryDto,
+  CreateCategoryDto,
+  CategoryFilter,
+} from "../../types/category.types";
+
+import CategoryModal from "./CategoryModal";
+
+const CategoriesPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<CategoryDto[]>([]);
+  const [total, setTotal] = useState(0);
+
+  // Filter State
+  const [filters, setFilters] = useState<CategoryFilter>({
+    pageNumber: 1,
+    pageSize: 10,
+    keyword: "",
+  });
+
+  // Modal State
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingItem, setEditingItem] = useState<CategoryDto | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // 1. Fetch Data
+  const fetchData = async (currentFilters: CategoryFilter) => {
+    // console.log("1. Bắt đầu gọi fetchData với filter:", currentFilters);
+    setLoading(true);
+    try {
+      //  THÊM DÒNG NÀY ĐỂ KIỂM TRA
+      console.log("CategoryAPI object:", categoryApi);
+
+      const response = await categoryApi.getPaged(currentFilters);
+      //  THÊM DÒNG NÀY ĐỂ XEM KẾT QUẢ
+      console.log("Response:", response);
+      if (response) {
+        setData(response.data);
+        setTotal(response.totalRecords);
+      }
+    } catch (error) {
+      //  IN LỖI RA MÀN HÌNH CONSOLE
+      console.error(" LỖI CHI TIẾT:", error);
+      message.error("Lỗi tải danh mục!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounce Search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData(filters);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters]);
+
+  // 2. Handlers
+  const handleTableChange = (pagination: any) => {
+    setFilters({
+      ...filters,
+      pageNumber: pagination.current,
+      pageSize: pagination.pageSize,
+    });
+  };
+
+  const handleModalSubmit = async (values: CreateCategoryDto) => {
+    setSubmitting(true);
+    try {
+      if (editingItem?.id) {
+        await categoryApi.update({ ...values, id: editingItem.id });
+        message.success("Cập nhật thành công!");
+      } else {
+        await categoryApi.create(values);
+        message.success("Tạo mới thành công!");
+      }
+      setModalVisible(false);
+      fetchData(filters);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || "Có lỗi xảy ra!");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await categoryApi.delete(id);
+      message.success("Đã xóa danh mục!");
+      fetchData(filters);
+    } catch (error: any) {
+      // Backend có check ràng buộc bài viết, hiển thị lỗi đó ra
+      const msg = error.response?.data?.message || "Xóa thất bại!";
+      message.error(msg);
+    }
+  };
+
+  // 3. Columns
+  const columns: ColumnsType<CategoryDto> = [
+    {
+      title: "Tên danh mục",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record) => (
+        <div>
+          <div className="font-semibold text-blue-700">{text}</div>
+          <div className="text-xs text-gray-400 italic">{record.slug}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+    },
+    {
+      title: "Bài viết",
+      dataIndex: "postCount",
+      key: "postCount",
+      align: "center",
+      width: 100,
+      render: (count) => <span className="font-bold">{count}</span>,
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      width: 150,
+      render: (date) => dayjs(date).format("DD/MM/YYYY"),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: 100,
+      align: "center",
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => {
+              setEditingItem(record);
+              setModalVisible(true);
+            }}
+          />
+          <Popconfirm
+            title="Xóa danh mục?"
+            description="Không thể xóa nếu danh mục đang có bài viết!"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button icon={<DeleteOutlined />} danger size="small" />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <Card
+      title="Quản Lý Danh Mục Blog"
+      variant="borderless"
+      extra={
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            setEditingItem(null);
+            setModalVisible(true);
+          }}
+        >
+          Thêm mới
+        </Button>
+      }
+    >
+      <div className="mb-5 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <div className="text-xs font-semibold text-gray-500 mb-1">
+              TỪ KHÓA
+            </div>
+            <Input
+              placeholder="Tìm tên danh mục..."
+              prefix={<FilterOutlined className="text-gray-400" />}
+              value={filters.keyword}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  keyword: e.target.value,
+                  pageNumber: 1,
+                })
+              }
+              allowClear
+            />
+          </Col>
+          <Col xs={24} md={12} className="flex items-end">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                setFilters({ ...filters, keyword: "" });
+              }}
+            >
+              Làm mới
+            </Button>
+          </Col>
+        </Row>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: filters.pageNumber,
+          pageSize: filters.pageSize,
+          total: total,
+          showSizeChanger: true,
+          showTotal: (t) => `Tổng ${t} danh mục`,
+          locale: { items_per_page: " / trang" },
+        }}
+        onChange={handleTableChange}
+      />
+
+      <CategoryModal
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onSubmit={handleModalSubmit}
+        loading={submitting}
+        initialData={editingItem}
+      />
+    </Card>
+  );
+};
+
+export default CategoriesPage;

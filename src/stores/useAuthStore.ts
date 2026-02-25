@@ -30,7 +30,23 @@ export const useAuthStore = create<AuthState>()(
       login: (user, token) => set({ user, token, isAuthenticated: true }),
 
       // Hàm đăng xuất: Xóa sạch
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+
+      logout: () => {
+        // 1. Xóa state trong bộ nhớ React
+        set({ user: null, token: null, isAuthenticated: false });
+
+        // 2. Xóa key chính của Zustand
+        localStorage.removeItem("auth-storage");
+
+        // 3. Xóa các key "rác" còn sót lại (Bổ sung đoạn này)
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("isSystemAdmin");
+
+        // MẸO: Nếu bạn muốn xóa sạch sành sanh không còn gì cả (Reset app hoàn toàn)
+        // Thì dùng lệnh này thay thế cho tất cả các dòng removeItem ở trên:
+        // localStorage.clear();
+      },
     }),
     {
       name: "auth-storage", // Tên key trong localStorage

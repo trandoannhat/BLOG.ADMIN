@@ -1,11 +1,15 @@
+// https://nhatdev.top
 // src/router/index.tsx
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { Button, Result } from "antd"; // Dùng cho trang 404
+import { Button, Result } from "antd";
 import AuthLayout from "../layouts/AuthLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import LoginPage from "../pages/Login"; // Import trang Login thật
+import LoginPage from "../pages/Login";
+import ProjectsPage from "../pages/Projects"; // <--- 1. Import trang Projects thật
 import { useAuthStore } from "../stores/useAuthStore";
-
+import CategoriesPage from "../pages/Categories";
+import PostsPage from "../pages/Posts";
 // ==========================================
 // 1. CÁC COMPONENT BẢO VỆ ROUTE (GUARDS)
 // ==========================================
@@ -14,7 +18,6 @@ import { useAuthStore } from "../stores/useAuthStore";
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, token } = useAuthStore();
 
-  // Kiểm tra cả state và token trong localStorage cho chắc chắn
   if (!isAuthenticated || !token) {
     return <Navigate to="/login" replace />;
   }
@@ -34,7 +37,6 @@ const RejectedRoute = ({ children }: { children: React.ReactNode }) => {
 // ==========================================
 // 2. CÁC TRANG TẠM THỜI (PLACEHOLDERS)
 // ==========================================
-// Sau này bạn tạo file src/pages/Dashboard/index.tsx thì xóa dòng này đi import vào
 
 const Dashboard = () => (
   <div>
@@ -56,14 +58,9 @@ const Dashboard = () => (
   </div>
 );
 
-const Projects = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">Quản Lý Dự Án</h1>
-    <p>Chỗ này sau sẽ đặt cái Table Ant Design vào đây...</p>
-  </div>
-);
+// (Đã xóa component Projects tạm thời ở đây)
 
-// Trang 404 - Không tìm thấy
+// Trang 404
 const NotFound = () => (
   <Result
     status="404"
@@ -89,17 +86,18 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </ProtectedRoute>
     ),
-    errorElement: <NotFound />, // Xử lý lỗi crash trang
+    errorElement: <NotFound />,
     children: [
       {
-        index: true, // Đường dẫn mặc định (/)
+        index: true,
         element: <Dashboard />,
       },
       {
         path: "projects",
-        element: <Projects />,
+        element: <ProjectsPage />, // <--- 2. Sử dụng trang thật ở đây
       },
-      // Thêm các route admin khác ở đây...
+      { path: "categories", element: <CategoriesPage /> },
+      { path: "posts", element: <PostsPage /> },
     ],
   },
   {
@@ -116,7 +114,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // Catch-all: Nếu nhập linh tinh -> Đá về 404 hoặc Home
   {
     path: "*",
     element: <NotFound />,
