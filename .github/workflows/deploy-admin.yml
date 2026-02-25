@@ -1,0 +1,35 @@
+name: Deploy Admin React Vite
+
+on:
+  push:
+    #  Nhớ kiểm tra nhánh của  là "main" hay "master"
+    branches: ["master"]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies and Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 24700 # Vẫn giữ nguyên cổng SSH 24700 của VPS
+          # Lấy toàn bộ nội dung sau khi build ném thẳng vào VPS
+          source: "dist/*"
+          target: "/var/www/admin.nhatdev.top"
+          strip_components: 1
