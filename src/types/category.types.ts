@@ -1,6 +1,5 @@
 // https://nhatdev.top
 // src/types/category.types.ts
-// src/types/category.types.ts
 
 export interface CategoryDto {
   id: string;
@@ -9,11 +8,14 @@ export interface CategoryDto {
   description?: string;
   postCount: number;
   createdAt: string;
+  parentId?: string | null; // --- THÊM MỚI ---
+  children?: CategoryDto[]; // --- THÊM MỚI: Dùng cho Tree Table ---
 }
 
 export interface CreateCategoryDto {
   name: string;
   description?: string;
+  parentId?: string | null; // --- THÊM MỚI ---
 }
 
 export interface UpdateCategoryDto extends CreateCategoryDto {

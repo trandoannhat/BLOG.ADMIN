@@ -1,7 +1,7 @@
 // https://nhatdev.top
 // src/pages/Categories/CategoryModal.tsx
 import { useEffect } from "react";
-import { Modal, Form, Input } from "antd";
+import { Modal, Form, Input, Select } from "antd";
 import type {
   CategoryDto,
   CreateCategoryDto,
@@ -13,6 +13,7 @@ interface Props {
   onSubmit: (values: CreateCategoryDto) => void;
   initialData?: CategoryDto | null;
   loading: boolean;
+  categories: CategoryDto[]; // --- THÊM MỚI: Nhận danh sách phẳng để làm options ---
 }
 
 const CategoryModal = ({
@@ -21,6 +22,7 @@ const CategoryModal = ({
   onSubmit,
   initialData,
   loading,
+  categories,
 }: Props) => {
   const [form] = Form.useForm();
 
@@ -36,9 +38,22 @@ const CategoryModal = ({
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-      onSubmit(values);
+      // Đảm bảo parentId là null nếu không chọn gì, thay vì undefined hay chuỗi rỗng
+      const payload = {
+        ...values,
+        parentId: values.parentId || null,
+      };
+      onSubmit(payload);
     });
   };
+
+  // --- THÊM MỚI: Lọc bỏ chính danh mục đang edit (và các con của nó nếu cần, nhưng tạm thời chỉ cần bỏ chính nó để chống lặp level 1) ---
+  const parentOptions = categories
+    .filter((c) => c.id !== initialData?.id)
+    .map((c) => ({
+      value: c.id,
+      label: c.name,
+    }));
 
   return (
     <Modal
@@ -55,6 +70,19 @@ const CategoryModal = ({
           rules={[{ required: true, message: "Vui lòng nhập tên danh mục" }]}
         >
           <Input placeholder="Ví dụ: Công nghệ, Đời sống..." />
+        </Form.Item>
+
+        {/* --- THÊM MỚI: Dropdown chọn danh mục cha --- */}
+        <Form.Item name="parentId" label="Danh mục cha">
+          <Select
+            allowClear
+            showSearch
+            placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
+            options={parentOptions}
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+          />
         </Form.Item>
 
         <Form.Item name="description" label="Mô tả">

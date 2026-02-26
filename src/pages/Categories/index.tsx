@@ -9,7 +9,6 @@ import {
   message,
   Card,
   Input,
-  //Tooltip,
   Row,
   Col,
 } from "antd";
@@ -18,7 +17,6 @@ import {
   DeleteOutlined,
   PlusOutlined,
   ReloadOutlined,
-  // SearchOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -27,22 +25,19 @@ import categoryApi from "../../api/categoryApi";
 import type {
   CategoryDto,
   CreateCategoryDto,
-  CategoryFilter,
 } from "../../types/category.types";
 
 import CategoryModal from "./CategoryModal";
 
 const CategoriesPage = () => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<CategoryDto[]>([]);
-  const [total, setTotal] = useState(0);
 
-  // Filter State
-  const [filters, setFilters] = useState<CategoryFilter>({
-    pageNumber: 1,
-    pageSize: 10,
-    keyword: "",
-  });
+  // State chứa data dạng cây cho Table
+  const [treeData, setTreeData] = useState<CategoryDto[]>([]);
+  // State chứa data phẳng để truyền vào dropdown Modal
+  const [flatData, setFlatData] = useState<CategoryDto[]>([]);
+
+  const [keyword, setKeyword] = useState("");
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -50,46 +45,31 @@ const CategoriesPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // 1. Fetch Data
-  const fetchData = async (currentFilters: CategoryFilter) => {
-    // console.log("1. Bắt đầu gọi fetchData với filter:", currentFilters);
+  const fetchData = async () => {
     setLoading(true);
     try {
-      //  THÊM DÒNG NÀY ĐỂ KIỂM TRA
-      console.log("CategoryAPI object:", categoryApi);
+      // Gọi cả 2 API: getTree cho Table và getAll cho Dropdown
+      // Tùy API của bạn cấu hình thế nào, ở đây tôi dùng Promise.all cho tối ưu
+      const [treeRes, flatRes] = await Promise.all([
+        categoryApi.getTree(),
+        categoryApi.getAll(),
+      ]);
 
-      const response = await categoryApi.getPaged(currentFilters);
-      //  THÊM DÒNG NÀY ĐỂ XEM KẾT QUẢ
-      console.log("Response:", response);
-      if (response) {
-        setData(response.data);
-        setTotal(response.totalRecords);
-      }
+      if (treeRes?.data) setTreeData(treeRes.data);
+      if (flatRes?.data) setFlatData(flatRes.data);
     } catch (error) {
-      //  IN LỖI RA MÀN HÌNH CONSOLE
-      console.error(" LỖI CHI TIẾT:", error);
+      console.error("LỖI CHI TIẾT:", error);
       message.error("Lỗi tải danh mục!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Debounce Search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchData(filters);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [filters]);
+    fetchData();
+  }, []);
 
   // 2. Handlers
-  const handleTableChange = (pagination: any) => {
-    setFilters({
-      ...filters,
-      pageNumber: pagination.current,
-      pageSize: pagination.pageSize,
-    });
-  };
-
   const handleModalSubmit = async (values: CreateCategoryDto) => {
     setSubmitting(true);
     try {
@@ -101,7 +81,7 @@ const CategoriesPage = () => {
         message.success("Tạo mới thành công!");
       }
       setModalVisible(false);
-      fetchData(filters);
+      fetchData(); // Load lại data
     } catch (error: any) {
       message.error(error.response?.data?.message || "Có lỗi xảy ra!");
     } finally {
@@ -113,13 +93,17 @@ const CategoriesPage = () => {
     try {
       await categoryApi.delete(id);
       message.success("Đã xóa danh mục!");
-      fetchData(filters);
+      fetchData();
     } catch (error: any) {
-      // Backend có check ràng buộc bài viết, hiển thị lỗi đó ra
       const msg = error.response?.data?.message || "Xóa thất bại!";
       message.error(msg);
     }
   };
+
+  // Lọc Table theo Keyword ở Frontend (Vì đang dùng Tree Data)
+  const filteredData = treeData.filter((item) =>
+    item.name.toLowerCase().includes(keyword.toLowerCase()),
+  );
 
   // 3. Columns
   const columns: ColumnsType<CategoryDto> = [
@@ -171,7 +155,7 @@ const CategoriesPage = () => {
           />
           <Popconfirm
             title="Xóa danh mục?"
-            description="Không thể xóa nếu danh mục đang có bài viết!"
+            description="Các danh mục con (nếu có) sẽ trở thành danh mục gốc."
             onConfirm={() => handleDelete(record.id)}
             okText="Xóa"
             cancelText="Hủy"
@@ -210,14 +194,8 @@ const CategoriesPage = () => {
             <Input
               placeholder="Tìm tên danh mục..."
               prefix={<FilterOutlined className="text-gray-400" />}
-              value={filters.keyword}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  keyword: e.target.value,
-                  pageNumber: 1,
-                })
-              }
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               allowClear
             />
           </Col>
@@ -225,7 +203,8 @@ const CategoriesPage = () => {
             <Button
               icon={<ReloadOutlined />}
               onClick={() => {
-                setFilters({ ...filters, keyword: "" });
+                setKeyword("");
+                fetchData();
               }}
             >
               Làm mới
@@ -236,18 +215,10 @@ const CategoriesPage = () => {
 
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={filteredData}
         rowKey="id"
         loading={loading}
-        pagination={{
-          current: filters.pageNumber,
-          pageSize: filters.pageSize,
-          total: total,
-          showSizeChanger: true,
-          showTotal: (t) => `Tổng ${t} danh mục`,
-          locale: { items_per_page: " / trang" },
-        }}
-        onChange={handleTableChange}
+        pagination={false} // Tắt phân trang vì cấu trúc Tree không phù hợp phân trang cứng
       />
 
       <CategoryModal
@@ -256,6 +227,7 @@ const CategoriesPage = () => {
         onSubmit={handleModalSubmit}
         loading={submitting}
         initialData={editingItem}
+        categories={flatData} // Truyền data phẳng vào cho Modal
       />
     </Card>
   );

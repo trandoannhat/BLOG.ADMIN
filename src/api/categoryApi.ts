@@ -27,6 +27,12 @@ const categoryApi = {
     return axiosClient.get<any, { data: CategoryDto[] }>("/Categories/all");
   },
 
+  // --- THÊM MỚI: Gọi API lấy dữ liệu dạng Cây (Tree) ---
+  getTree() {
+    return axiosClient.get<any, { data: CategoryDto[] }>("/Categories/tree");
+  },
+  // -----------------------------------------------------
+
   getById(id: string) {
     return axiosClient.get<any, { data: CategoryDto }>(`/Categories/${id}`);
   },
