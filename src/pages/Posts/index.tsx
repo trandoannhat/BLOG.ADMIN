@@ -13,6 +13,7 @@ import {
   Input,
   Select,
   Image,
+  TreeSelect,
 } from "antd";
 import {
   EditOutlined,
@@ -58,9 +59,10 @@ const PostsPage = () => {
     fetchCategories();
   }, []);
 
+  // --- SỬA: Dùng getTree() ---
   const fetchCategories = async () => {
     try {
-      const res = await categoryApi.getAll();
+      const res = await categoryApi.getTree();
       setCategories(res.data || []);
     } catch (e) {
       console.log(e);
@@ -248,21 +250,19 @@ const PostsPage = () => {
             />
           </Col>
           <Col xs={24} md={7}>
-            <Select
+            {/* --- SỬA: Dùng TreeSelect cho bộ lọc --- */}
+            <TreeSelect
               style={{ width: "100%" }}
               placeholder="Lọc theo danh mục"
               allowClear
+              treeDefaultExpandAll
+              treeData={categories}
+              fieldNames={{ label: "name", value: "id", children: "children" }}
               value={filters.categoryId}
               onChange={(val) =>
                 setFilters({ ...filters, categoryId: val, pageNumber: 1 })
               }
-            >
-              {categories.map((c) => (
-                <Option key={c.id} value={c.id}>
-                  {c.name}
-                </Option>
-              ))}
-            </Select>
+            />
           </Col>
           <Col xs={24} md={7}>
             <Select

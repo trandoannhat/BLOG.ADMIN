@@ -1,16 +1,23 @@
 // https://nhatdev.top
 // src/pages/Posts/PostModal.tsx
 import { useEffect, useState } from "react";
-import { Modal, Form, Input, Switch, Select, Row, Col, message } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Switch,
+  Row,
+  Col,
+  message,
+  TreeSelect,
+} from "antd";
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; // Style của Editor
+import "react-quill/dist/quill.snow.css";
 
 import type { CreatePostDto, PostDto } from "../../types/post.types";
 import type { CategoryDto } from "../../types/category.types";
 import categoryApi from "../../api/categoryApi";
 import ImageUpload from "../../components/ImageUpload";
-
-const { Option } = Select;
 
 interface Props {
   visible: boolean;
@@ -30,7 +37,6 @@ const PostModal = ({
   const [form] = Form.useForm();
   const [categories, setCategories] = useState<CategoryDto[]>([]);
 
-  // Lấy danh sách danh mục khi mở Modal
   useEffect(() => {
     if (visible) {
       fetchCategories();
@@ -43,9 +49,10 @@ const PostModal = ({
     }
   }, [visible, initialData, form]);
 
+  // --- SỬA: Dùng getTree() thay vì getAll() ---
   const fetchCategories = async () => {
     try {
-      const res = await categoryApi.getAll();
+      const res = await categoryApi.getTree();
       setCategories(res.data || []);
     } catch (error) {
       message.error("Lỗi tải danh mục");
@@ -58,7 +65,6 @@ const PostModal = ({
     });
   };
 
-  // Cấu hình Toolbar cho Editor
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
@@ -76,7 +82,7 @@ const PostModal = ({
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={loading}
-      width={1000} // Modal rộng hơn để dễ gõ text
+      width={1000}
     >
       <Form form={form} layout="vertical">
         <Row gutter={16}>
@@ -100,7 +106,6 @@ const PostModal = ({
                 { required: true, message: "Nội dung không được để trống!" },
               ]}
             >
-              {/* Trình soạn thảo Rich Text */}
               <ReactQuill
                 theme="snow"
                 modules={modules}
@@ -110,26 +115,31 @@ const PostModal = ({
           </Col>
 
           <Col span={8}>
+            {/* --- SỬA: Dùng TreeSelect để hiển thị danh mục đa cấp --- */}
             <Form.Item
               name="categoryId"
               label="Danh mục"
               rules={[{ required: true, message: "Chọn danh mục!" }]}
             >
-              <Select
-                placeholder="-- Chọn danh mục --"
+              <TreeSelect
                 showSearch
-                optionFilterProp="children"
-              >
-                {categories.map((c) => (
-                  <Option key={c.id} value={c.id}>
-                    {c.name}
-                  </Option>
-                ))}
-              </Select>
+                style={{ width: "100%" }}
+                dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
+                placeholder="-- Chọn danh mục --"
+                allowClear
+                treeDefaultExpandAll
+                treeData={categories}
+                // Map đúng các key của CategoryDto vào TreeSelect
+                fieldNames={{
+                  label: "name",
+                  value: "id",
+                  children: "children",
+                }}
+                treeNodeFilterProp="name" // Hỗ trợ tìm kiếm theo tên
+              />
             </Form.Item>
 
             <Form.Item name="thumbnailUrl" label="Ảnh bìa bài viết">
-              {/* Tái sử dụng ImageUpload đã kết nối Cloudinary */}
               <ImageUpload folder="blogs" />
             </Form.Item>
 
