@@ -56,13 +56,18 @@ const ProjectModal = ({
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-      // FIX LỖI ẢNH: Đảm bảo lấy đúng chuỗi URL.
-      // (Đôi khi ImageUpload trả về 1 object thay vì 1 chuỗi string, ta cần bắt trường hợp đó)
+      // 1. XỬ LÝ LỖI ẢNH:
       let finalThumbnailUrl = "";
       if (typeof values.thumbnailUrl === "string") {
         finalThumbnailUrl = values.thumbnailUrl;
       } else if (values.thumbnailUrl && values.thumbnailUrl.url) {
         finalThumbnailUrl = values.thumbnailUrl.url;
+      }
+
+      // 2. XỬ LÝ NỘI DUNG RỖNG CỦA REACT-QUILL
+      let finalContent = values.content;
+      if (finalContent === "<p><br></p>" || finalContent === "<h1><br></h1>") {
+        finalContent = "";
       }
 
       const submitData: CreateProjectDto = {
@@ -73,6 +78,7 @@ const ProjectModal = ({
         completedDate: values.completedDate
           ? values.completedDate.toISOString()
           : undefined,
+
         techStacks: values.techStacks
           ? values.techStacks
               .split(",")
@@ -80,8 +86,12 @@ const ProjectModal = ({
               .filter((t: string) => t !== "")
           : [],
 
-        // 👇 GỬI CHÍNH XÁC DỮ LIỆU ẢNH LÊN BACKEND
+        content: finalContent, // Dùng content đã xử lý
+
+        // 👇 GỬI CHÍNH XÁC DỮ LIỆU LÊN BACKEND
         thumbnailUrl: finalThumbnailUrl,
+
+        // Luôn gửi mảng imageUrls, nếu có ảnh thì add vào, không thì rỗng
         imageUrls: finalThumbnailUrl ? [finalThumbnailUrl] : [],
       };
 
@@ -172,7 +182,7 @@ const ProjectModal = ({
           />
         </Form.Item>
 
-        {/* 👇 THAY THẾ BẰNG KHUNG SOẠN THẢO RICH TEXT EDITOR */}
+        {/* THAY THẾ BẰNG KHUNG SOẠN THẢO RICH TEXT EDITOR */}
         <Form.Item
           name="content"
           label="Nội dung Case Study chi tiết (Sẽ hiển thị thành bài viết)"
