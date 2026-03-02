@@ -1,15 +1,18 @@
 // https://nhatdev.top
 // src/router/index.tsx
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Button, Result } from "antd";
+
+// --- IMPORTS ---
 import AuthLayout from "../layouts/AuthLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import LoginPage from "../pages/Login";
-import ProjectsPage from "../pages/Projects"; // <--- 1. Import trang Projects thật
-import { useAuthStore } from "../stores/useAuthStore";
+import ProjectsPage from "../pages/Projects";
 import CategoriesPage from "../pages/Categories";
 import PostsPage from "../pages/Posts";
+import DonationsPage from "../pages/Donations"; // <--- Import trang Donations
+import { useAuthStore } from "../stores/useAuthStore";
+
 // ==========================================
 // 1. CÁC COMPONENT BẢO VỆ ROUTE (GUARDS)
 // ==========================================
@@ -58,8 +61,6 @@ const Dashboard = () => (
   </div>
 );
 
-// (Đã xóa component Projects tạm thời ở đây)
-
 // Trang 404
 const NotFound = () => (
   <Result
@@ -94,10 +95,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "projects",
-        element: <ProjectsPage />, // <--- 2. Sử dụng trang thật ở đây
+        element: <ProjectsPage />,
       },
       { path: "categories", element: <CategoriesPage /> },
       { path: "posts", element: <PostsPage /> },
+      { path: "donations", element: <DonationsPage /> }, // <--- THÊM ROUTE DONATIONS VÀO ĐÂY
     ],
   },
   {

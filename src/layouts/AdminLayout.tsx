@@ -8,11 +8,12 @@ import {
   ProjectOutlined,
   LogoutOutlined,
   AppstoreOutlined,
+  EditOutlined,
+  HeartOutlined, // <--- THÊM IMPORT ICON TRÁI TIM CHO DONATE
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthStore } from "../stores/useAuthStore";
-import { EditOutlined } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
 
@@ -53,8 +54,12 @@ const AdminLayout = () => {
       icon: <ProjectOutlined />,
       label: <Link to="/projects">Quản lý Dự án</Link>,
     },
-    // Sau này thêm bài viết:
-    // { key: "/posts", icon: <EditOutlined />, label: <Link to="/posts">Bài viết</Link> },
+    // 👇 THÊM MENU DONATE VÀO ĐÂY
+    {
+      key: "/donations",
+      icon: <HeartOutlined />,
+      label: <Link to="/donations">Quản lý Ủng hộ</Link>,
+    },
   ];
 
   return (
