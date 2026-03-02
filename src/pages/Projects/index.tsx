@@ -1,4 +1,3 @@
-// https://nhatdev.top
 // src/pages/Projects/index.tsx
 import { useEffect, useState } from "react";
 import {
@@ -15,8 +14,6 @@ import {
   DatePicker,
   Row,
   Col,
-  // Typography,
-  // Tag,
 } from "antd";
 import {
   EditOutlined,
@@ -47,7 +44,6 @@ const ProjectsPage = () => {
   const [data, setData] = useState<ProjectDto[]>([]);
   const [total, setTotal] = useState(0);
 
-  // --- 1. STATE BỘ LỌC ---
   const [filters, setFilters] = useState<ProjectFilter>({
     pageNumber: 1,
     pageSize: 10,
@@ -61,7 +57,6 @@ const ProjectsPage = () => {
   const [editingProject, setEditingProject] = useState<ProjectDto | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // --- 2. HÀM GỌI API ---
   const fetchData = async (currentFilters: ProjectFilter) => {
     setLoading(true);
     try {
@@ -78,7 +73,6 @@ const ProjectsPage = () => {
     }
   };
 
-  // Debounce Search
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchData(filters);
@@ -86,7 +80,6 @@ const ProjectsPage = () => {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  // --- 3. XỬ LÝ SỰ KIỆN LỌC ---
   const handleTableChange = (newPagination: any) => {
     setFilters({
       ...filters,
@@ -129,18 +122,16 @@ const ProjectsPage = () => {
   };
 
   const handleRefresh = () => {
-    const defaultFilter: ProjectFilter = {
+    setFilters({
       pageNumber: 1,
       pageSize: 10,
       keyword: "",
       isFeatured: null,
       fromDate: undefined,
       toDate: undefined,
-    };
-    setFilters(defaultFilter);
+    });
   };
 
-  // --- 4. CRUD HANDLERS ---
   const handleModalSubmit = async (values: CreateProjectDto) => {
     setSubmitting(true);
     try {
@@ -170,18 +161,17 @@ const ProjectsPage = () => {
     }
   };
 
-  // --- 5. CẤU HÌNH CỘT (VIỆT HÓA) ---
   const columns: ColumnsType<ProjectDto> = [
     {
       title: "Ảnh",
       dataIndex: "thumbnailUrl",
-      width: 70,
+      width: 80,
       render: (url) => (
         <Image
           src={url || "error"}
-          width={50}
-          height={35}
-          className="rounded border"
+          width={60}
+          height={40}
+          className="rounded border object-cover"
           fallback="https://via.placeholder.com/150"
         />
       ),
@@ -191,9 +181,11 @@ const ProjectsPage = () => {
       dataIndex: "name",
       render: (text, record) => (
         <div>
-          <div className="font-bold text-blue-700">{text}</div>
+          <div className="font-bold text-blue-600">{text}</div>
           {record.clientName && (
-            <div className="text-xs text-gray-500">KH: {record.clientName}</div>
+            <div className="text-xs text-gray-500 mt-1">
+              KH: {record.clientName}
+            </div>
           )}
         </div>
       ),
@@ -214,10 +206,12 @@ const ProjectsPage = () => {
     },
     {
       title: "Thời gian",
-      width: 140,
+      width: 150,
       render: (_, record) => (
         <div className="text-xs">
-          <div>{dayjs(record.startDate).format("DD/MM/YYYY")}</div>
+          <div className="font-medium text-gray-700">
+            {dayjs(record.startDate).format("DD/MM/YYYY")}
+          </div>
           {record.completedDate && (
             <div className="text-gray-400">
               → {dayjs(record.completedDate).format("DD/MM/YYYY")}
@@ -232,11 +226,11 @@ const ProjectsPage = () => {
       width: 100,
       align: "center",
       render: (_, record) => (
-        <Space size="small">
+        <Space size="middle">
           <Tooltip title="Chỉnh sửa">
             <Button
-              icon={<EditOutlined />}
-              size="small"
+              type="text"
+              icon={<EditOutlined className="text-blue-500" />}
               onClick={() => {
                 setEditingProject(record);
                 setModalVisible(true);
@@ -252,7 +246,7 @@ const ProjectsPage = () => {
               cancelText="Hủy"
               okButtonProps={{ danger: true }}
             >
-              <Button icon={<DeleteOutlined />} danger size="small" />
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -262,7 +256,7 @@ const ProjectsPage = () => {
 
   return (
     <Card
-      title="Quản Lý Dự Án"
+      title={<span className="text-lg font-bold">Quản Lý Dự Án</span>}
       variant="borderless"
       extra={
         <Button
@@ -272,15 +266,14 @@ const ProjectsPage = () => {
             setEditingProject(null);
             setModalVisible(true);
           }}
+          className="bg-blue-600 hover:bg-blue-700"
         >
-          Thêm mới
+          Thêm mới dự án
         </Button>
       }
     >
-      {/* --- THANH BỘ LỌC (ĐÃ CẬP NHẬT GIAO DIỆN NÚT) --- */}
-      <div className="mb-5 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl shadow-sm">
         <Row gutter={[16, 16]}>
-          {/* 1. Tìm kiếm (Giảm từ 8 -> 7 để nhường chỗ) */}
           <Col xs={24} md={7}>
             <div className="text-xs font-semibold text-gray-500 mb-1">
               TỪ KHÓA
@@ -295,7 +288,6 @@ const ProjectsPage = () => {
             />
           </Col>
 
-          {/* 2. Trạng thái (Giữ nguyên 5) */}
           <Col xs={24} md={5}>
             <div className="text-xs font-semibold text-gray-500 mb-1">
               TRẠNG THÁI
@@ -317,7 +309,6 @@ const ProjectsPage = () => {
             </Select>
           </Col>
 
-          {/* 3. Thời gian (Giữ nguyên 7) */}
           <Col xs={24} md={7}>
             <div className="text-xs font-semibold text-gray-500 mb-1">
               KHOẢNG THỜI GIAN
@@ -335,30 +326,26 @@ const ProjectsPage = () => {
             />
           </Col>
 
-          {/* 4. Thao tác (Tăng từ 4 -> 5) */}
           <Col xs={24} md={5}>
             <div className="text-xs font-semibold text-gray-500 mb-1">
               THAO TÁC
             </div>
-
-            {/* 👇 THAY ĐỔI Ở ĐÂY: Dùng Flexbox + className flex-1 */}
             <div className="flex gap-2 w-full">
               <Button
                 type="primary"
                 icon={<SearchOutlined />}
                 onClick={handleApplyFilter}
-                className="flex-1" // Giúp nút tự căng ra chiếm 50%
+                className="flex-1"
               >
-                Tìm kiếm
+                Tìm
               </Button>
-
-              <Tooltip title="Xóa bộ lọc & Tải lại">
+              <Tooltip title="Làm mới bộ lọc">
                 <Button
                   icon={<ReloadOutlined />}
                   onClick={handleRefresh}
-                  className="flex-1" // Giúp nút tự căng ra chiếm 50%
+                  className="flex-1"
                 >
-                  Làm mới
+                  Reset
                 </Button>
               </Tooltip>
             </div>
@@ -371,20 +358,18 @@ const ProjectsPage = () => {
         dataSource={data}
         rowKey="id"
         loading={loading}
-        // Việt hóa phân trang
         pagination={{
           current: filters.pageNumber,
           pageSize: filters.pageSize,
           total: total,
           showSizeChanger: true,
           showTotal: (total, range) =>
-            `${range[0]}-${range[1]} trong ${total} dự án`,
-          locale: { items_per_page: " / trang" }, // Sửa chữ '/ page' thành '/ trang'
+            `${range[0]}-${range[1]} / ${total} dự án`,
+          locale: { items_per_page: " / trang" },
         }}
         onChange={handleTableChange}
         scroll={{ x: 800 }}
       />
-
       <ProjectModal
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}

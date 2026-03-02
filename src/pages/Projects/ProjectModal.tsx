@@ -1,11 +1,13 @@
-// https://nhatdev.top
 // src/pages/Projects/ProjectModal.tsx
 import { useEffect } from "react";
 import { Modal, Form, Input, Switch, DatePicker, Row, Col } from "antd";
 import type { CreateProjectDto, ProjectDto } from "../../types/project.types";
 import dayjs from "dayjs";
-// 👇 1. Import Component Upload
 import ImageUpload from "../../components/ImageUpload";
+
+// 👇 IMPORT THƯ VIỆN SOẠN THẢO VĂN BẢN
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Style mặc định của Quill
 
 interface ProjectModalProps {
   visible: boolean;
@@ -27,7 +29,6 @@ const ProjectModal = ({
   useEffect(() => {
     if (visible) {
       if (initialData) {
-        // --- LOGIC FILL DATA ---
         form.setFieldsValue({
           ...initialData,
           techStacks: initialData.techStacks?.join(", "),
@@ -37,14 +38,17 @@ const ProjectModal = ({
           completedDate: initialData.completedDate
             ? dayjs(initialData.completedDate)
             : null,
-          // 👇 Ant Design Form sẽ tự bind giá trị này vào prop 'value' của ImageUpload
+          // Bắt đúng URL ảnh từ data cũ để truyền vào ImageUpload
           thumbnailUrl: initialData.thumbnailUrl,
+          // Bắt đúng nội dung HTML cũ
+          content: initialData.content,
         });
       } else {
         form.resetFields();
         form.setFieldsValue({
           startDate: dayjs(),
           isFeatured: false,
+          content: "", // Khởi tạo nội dung rỗng
         });
       }
     }
@@ -52,9 +56,14 @@ const ProjectModal = ({
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-
-// 👇 1. Debug: In ra xem Form đã nhận được URL ảnh chưa?
-    console.log("Giá trị Form:", values);
+      // FIX LỖI ẢNH: Đảm bảo lấy đúng chuỗi URL.
+      // (Đôi khi ImageUpload trả về 1 object thay vì 1 chuỗi string, ta cần bắt trường hợp đó)
+      let finalThumbnailUrl = "";
+      if (typeof values.thumbnailUrl === "string") {
+        finalThumbnailUrl = values.thumbnailUrl;
+      } else if (values.thumbnailUrl && values.thumbnailUrl.url) {
+        finalThumbnailUrl = values.thumbnailUrl.url;
+      }
 
       const submitData: CreateProjectDto = {
         ...values,
@@ -65,13 +74,30 @@ const ProjectModal = ({
           ? values.completedDate.toISOString()
           : undefined,
         techStacks: values.techStacks
-          ? values.techStacks.split(",").map((t: string) => t.trim())
+          ? values.techStacks
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter((t: string) => t !== "")
           : [],
-        // Logic này giữ nguyên: lấy URL từ ImageUpload đóng gói vào mảng
-        imageUrls: values.thumbnailUrl ? [values.thumbnailUrl] : [],
+
+        // 👇 GỬI CHÍNH XÁC DỮ LIỆU ẢNH LÊN BACKEND
+        thumbnailUrl: finalThumbnailUrl,
+        imageUrls: finalThumbnailUrl ? [finalThumbnailUrl] : [],
       };
+
       onSubmit(submitData);
     });
+  };
+
+  // Cấu hình thanh công cụ cho ReactQuill
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link", "image"],
+      ["clean"],
+    ],
   };
 
   return (
@@ -81,7 +107,8 @@ const ProjectModal = ({
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={loading}
-      width={800}
+      width={1000} // Mở rộng Modal để soạn thảo thoải mái
+      style={{ top: 20 }}
     >
       <Form form={form} layout="vertical">
         <Row gutter={16}>
@@ -91,18 +118,18 @@ const ProjectModal = ({
               label="Tên dự án"
               rules={[{ required: true, message: "Vui lòng nhập tên dự án" }]}
             >
-              <Input placeholder="Tên dự án..." />
+              <Input placeholder="Ví dụ: QLTS PRO 7.1..." />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="clientName" label="Khách hàng">
-              <Input placeholder="Tên khách hàng..." />
+            <Form.Item name="clientName" label="Khách hàng / Đơn vị (Tùy chọn)">
+              <Input placeholder="Ví dụ: DTSoft..." />
             </Form.Item>
           </Col>
         </Row>
 
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item
               name="startDate"
               label="Ngày bắt đầu"
@@ -111,7 +138,7 @@ const ProjectModal = ({
               <DatePicker className="w-full" format="DD/MM/YYYY" />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item name="completedDate" label="Ngày hoàn thành">
               <DatePicker
                 className="w-full"
@@ -120,51 +147,58 @@ const ProjectModal = ({
               />
             </Form.Item>
           </Col>
+          <Col span={8}>
+            <Form.Item
+              name="isFeatured"
+              valuePropName="checked"
+              label="Gắn cờ Nổi bật?"
+            >
+              <Switch checkedChildren="Nổi bật" unCheckedChildren="Thường" />
+            </Form.Item>
+          </Col>
         </Row>
 
         <Form.Item
-          name="isFeatured"
-          valuePropName="checked"
-          label="Dự án nổi bật?"
+          name="techStacks"
+          label="Công nghệ sử dụng (Cách nhau bằng dấu phẩy)"
         >
-          <Switch checkedChildren="Nổi bật" unCheckedChildren="Thường" />
+          <Input placeholder="React, .NET 8, PostgreSQL..." />
         </Form.Item>
 
-        <Form.Item name="description" label="Mô tả ngắn">
-          <Input.TextArea rows={2} placeholder="Mô tả hiển thị trên card..." />
-        </Form.Item>
-
-        <Form.Item name="content" label="Nội dung chi tiết (Case Study)">
+        <Form.Item name="description" label="Mô tả ngắn (Hiển thị ngoài Card)">
           <Input.TextArea
-            rows={6}
-            placeholder="Viết chi tiết về quá trình làm dự án..."
+            rows={2}
+            placeholder="Viết 1-2 câu tóm tắt về dự án..."
           />
         </Form.Item>
 
-        <Form.Item name="techStacks" label="Công nghệ (ngăn cách phẩy)">
-          <Input placeholder="React, .NET, SQL Server..." />
+        {/* 👇 THAY THẾ BẰNG KHUNG SOẠN THẢO RICH TEXT EDITOR */}
+        <Form.Item
+          name="content"
+          label="Nội dung Case Study chi tiết (Sẽ hiển thị thành bài viết)"
+        >
+          <ReactQuill
+            theme="snow"
+            modules={quillModules}
+            placeholder="Viết chi tiết về dự án của bạn tại đây..."
+            style={{ height: "300px", marginBottom: "40px" }} // Chừa khoảng trống cho thanh toolbar & bottom
+          />
         </Form.Item>
 
         <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="liveDemoUrl" label="Live Demo">
+          <Col span={8}>
+            <Form.Item name="liveDemoUrl" label="Link Sản phẩm / Demo">
               <Input placeholder="https://..." />
             </Form.Item>
           </Col>
-
-          {/* 👇 2. THAY THẾ INPUT TEXT BẰNG IMAGE UPLOAD */}
-          <Col span={12}>
-            <Form.Item
-              name="thumbnailUrl"
-              label="Ảnh Thumbnail"
-              // Thêm rules nếu muốn bắt buộc phải có ảnh
-              // rules={[{ required: true, message: "Vui lòng upload ảnh!" }]}
-            >
-              {/* Form.Item sẽ tự động truyền:
-                  - value={form.getFieldValue('thumbnailUrl')}
-                  - onChange={(url) => form.setFieldValue('thumbnailUrl', url)}
-                  vào component này.
-              */}
+          <Col span={8}>
+            <Form.Item name="sourceCodeUrl" label="Link Source Code (Tùy chọn)">
+              <Input placeholder="https://github.com/..." />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="thumbnailUrl" label="Ảnh Thumbnail (Bìa)">
+              {/* Form.Item sẽ tự đẩy value và onChange vào ImageUpload */}
               <ImageUpload folder="projects" />
             </Form.Item>
           </Col>
