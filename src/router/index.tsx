@@ -10,7 +10,10 @@ import LoginPage from "../pages/Login";
 import ProjectsPage from "../pages/Projects";
 import CategoriesPage from "../pages/Categories";
 import PostsPage from "../pages/Posts";
-import DonationsPage from "../pages/Donations"; // <--- Import trang Donations
+import DonationsPage from "../pages/Donations";
+// 👇 BƯỚC 1: IMPORT TRANG DASHBOARD MỚI VÀO ĐÂY
+import DashboardPage from "../pages/Dashboard";
+
 import { useAuthStore } from "../stores/useAuthStore";
 
 // ==========================================
@@ -38,30 +41,10 @@ const RejectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // ==========================================
-// 2. CÁC TRANG TẠM THỜI (PLACEHOLDERS)
+// 2. TRANG 404
 // ==========================================
+// (Đã xóa cái component Dashboard tạm thời ở đây)
 
-const Dashboard = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">Dashboard Thống Kê</h1>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-blue-500 text-white p-6 rounded-lg shadow">
-        <h3 className="text-lg">Tổng Dự Án</h3>
-        <p className="text-3xl font-bold">12</p>
-      </div>
-      <div className="bg-green-500 text-white p-6 rounded-lg shadow">
-        <h3 className="text-lg">Đang Chạy</h3>
-        <p className="text-3xl font-bold">5</p>
-      </div>
-      <div className="bg-orange-500 text-white p-6 rounded-lg shadow">
-        <h3 className="text-lg">Hoàn Thành</h3>
-        <p className="text-3xl font-bold">7</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Trang 404
 const NotFound = () => (
   <Result
     status="404"
@@ -91,7 +74,8 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        // 👇 BƯỚC 2: GỌI COMPONENT DASHBOARD PAGE RA ĐÂY
+        element: <DashboardPage />,
       },
       {
         path: "projects",
@@ -99,7 +83,7 @@ export const router = createBrowserRouter([
       },
       { path: "categories", element: <CategoriesPage /> },
       { path: "posts", element: <PostsPage /> },
-      { path: "donations", element: <DonationsPage /> }, // <--- THÊM ROUTE DONATIONS VÀO ĐÂY
+      { path: "donations", element: <DonationsPage /> },
     ],
   },
   {
