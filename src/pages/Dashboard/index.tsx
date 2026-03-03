@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Col, Row, Statistic, Progress, Button, Spin, Tag } from "antd";
 import {
   FileTextOutlined,
@@ -40,26 +40,22 @@ export default function DashboardPage() {
               isConfirmed: false,
             }),
             postApi.getPaged({ pageNumber: 1, pageSize: 1 }),
-            projectApi.getAll({ pageNumber: 1, pageSize: 1 }), // Đã sử dụng getAll thay vì getPaged
+            projectApi.getAll({ pageNumber: 1, pageSize: 1 }),
           ]);
 
-        // Xử lý cẩn thận các lớp dữ liệu trả về từ Axios / API
+        // Fix TypeScript khắt khe: Đưa object về dạng any để linh hoạt lấy dữ liệu
+        // Đề phòng trường hợp axiosClient tự động unwrap (bóc) lớp .data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawDonationStats: any = donationStatsRes;
+        const statsData = rawDonationStats?.data || rawDonationStats || {};
+
         setStats({
-          totalDonations:
-            donationStatsRes?.data?.totalRaised ||
-            donationStatsRes?.totalRaised ||
-            0,
-          targetDonation:
-            donationStatsRes?.data?.targetAmount ||
-            donationStatsRes?.targetAmount ||
-            1000000,
-          pendingDonations:
-            pendingDonationsRes?.data?.totalRecords ||
-            pendingDonationsRes?.totalRecords ||
-            0,
-          totalPosts: postRes?.data?.totalRecords || postRes?.totalRecords || 0, // Fix lỗi đếm = 0
-          totalProjects:
-            projectRes?.data?.totalRecords || projectRes?.totalRecords || 0, // Fix lỗi đếm = 0
+          totalDonations: statsData.totalRaised || 0,
+          targetDonation: statsData.targetAmount || 1000000,
+          // PagedResult đã định nghĩa rõ thuộc tính totalRecords nên truy cập thẳng
+          pendingDonations: pendingDonationsRes?.totalRecords || 0,
+          totalPosts: postRes?.totalRecords || 0,
+          totalProjects: projectRes?.totalRecords || 0,
         });
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu Dashboard:", error);
