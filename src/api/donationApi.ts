@@ -5,7 +5,6 @@ import type { DonationDto, DonationFilter } from "../types/donation.types";
 const donationApi = {
   // Lấy danh sách phân trang
   getPaged(filter: DonationFilter) {
-    // 👇 ĐÃ SỬA: Xóa chữ /paged đi, chỉ để "/Donations"
     return axiosClient.get<any, PagedResult<DonationDto>>("/Donations", {
       params: {
         PageNumber: filter.pageNumber,
@@ -14,6 +13,16 @@ const donationApi = {
         IsConfirmed: filter.isConfirmed,
       },
     });
+  },
+
+  // 👇 THÊM: Lấy thống kê (để lấy TargetAmount hiện tại hiển thị lên Admin)
+  getStats() {
+    return axiosClient.get("/Donations/stats");
+  },
+
+  // 👇 THÊM: Cập nhật Mục tiêu Donate
+  updateTargetAmount(targetAmount: number) {
+    return axiosClient.put("/Donations/target-amount", { targetAmount });
   },
 
   // Gạt công tắc Duyệt / Bỏ duyệt
