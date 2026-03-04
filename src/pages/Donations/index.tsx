@@ -1,3 +1,5 @@
+// https://nhatdev.top
+// src/pages/Donations/index.tsx
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -14,14 +16,12 @@ import {
   Select,
   Modal,
   Descriptions,
-  InputNumber, // Thêm component này của AntD
 } from "antd";
 import {
   DeleteOutlined,
   ReloadOutlined,
   FilterOutlined,
   EyeOutlined,
-  SaveOutlined, // Thêm icon Save
 } from "@ant-design/icons";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import dayjs from "dayjs";
@@ -32,10 +32,6 @@ const DonationsPage = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DonationDto[]>([]);
   const [total, setTotal] = useState(0);
-
-  // 👇 STATE CHO MỤC TIÊU DONATE
-  const [targetAmount, setTargetAmount] = useState<number | null>(null);
-  const [savingTarget, setSavingTarget] = useState(false);
 
   // State bộ lọc (Filter)
   const [filter, setFilter] = useState<DonationFilter>({
@@ -55,26 +51,18 @@ const DonationsPage = () => {
     }).format(amount);
   };
 
-  // Lấy dữ liệu bảng và lấy Mục tiêu hiện tại
+  // 👇 ĐÃ SỬA: Lấy dữ liệu bảng (Xóa bỏ gọi getStats thừa)
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Gọi song song 2 API cho nhanh
-      const [listRes, statsRes] = await Promise.all([
-        donationApi.getPaged(filter),
-        donationApi.getStats(),
-      ]);
+      const response = await donationApi.getPaged(filter);
 
-      if (listRes?.data) {
-        setData(listRes.data);
-        setTotal(listRes.totalRecords);
-      }
-
-      if (statsRes?.data) {
-        setTargetAmount(statsRes.data.targetAmount);
+      if (response?.data) {
+        setData(response.data);
+        setTotal(response.totalRecords);
       }
     } catch (error) {
-      message.error("Lỗi tải dữ liệu!");
+      message.error("Lỗi tải danh sách dữ liệu!");
     } finally {
       setLoading(false);
     }
@@ -85,25 +73,6 @@ const DonationsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter.pageNumber, filter.pageSize, filter.isConfirmed]);
 
-  // 👇 HÀM LƯU MỤC TIÊU MỚI
-  const handleSaveTarget = async () => {
-    if (!targetAmount || targetAmount <= 0) {
-      return message.warning("Vui lòng nhập số tiền mục tiêu hợp lệ!");
-    }
-    setSavingTarget(true);
-    try {
-      await donationApi.updateTargetAmount(targetAmount);
-      message.success("Đã cập nhật mục tiêu Donate thành công!");
-    } catch (error: any) {
-      message.error(
-        error.response?.data?.message || "Cập nhật mục tiêu thất bại!",
-      );
-    } finally {
-      setSavingTarget(false);
-    }
-  };
-
-  // Các Handlers cũ giữ nguyên...
   const handleTableChange = (pagination: TablePaginationConfig) => {
     setFilter((prev) => ({
       ...prev,
@@ -220,50 +189,6 @@ const DonationsPage = () => {
 
   return (
     <Space direction="vertical" size="large" className="w-full">
-      {/* KHU VỰC 1: CÀI ĐẶT MỤC TIÊU */}
-      <Card
-        title="🎯 Cài đặt Mục tiêu Donate"
-        variant="borderless"
-        className="shadow-sm"
-      >
-        <div className="flex flex-col sm:flex-row items-end gap-4">
-          {/* Ô Nhập Tiền (Bao gồm cả Label) */}
-          <div className="w-full sm:w-72">
-            <div className="text-xs font-semibold text-gray-500 mb-2">
-              SỐ TIỀN MỤC TIÊU (VNĐ)
-            </div>
-            <InputNumber
-              className="w-full"
-              size="large"
-              min={1000}
-              step={100000}
-              value={targetAmount}
-              onChange={(val) => setTargetAmount(val)}
-              formatter={(value) =>
-                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
-              parser={(value) =>
-                value!.replace(/\$\s?|(,*)/g, "") as unknown as number
-              }
-              placeholder="Nhập số tiền..."
-            />
-          </div>
-
-          {/* Nút Lưu (Tự động căn bằng đáy với ô Input) */}
-          <Button
-            type="primary"
-            size="large"
-            icon={<SaveOutlined />}
-            loading={savingTarget}
-            onClick={handleSaveTarget}
-            className="w-full sm:w-auto"
-          >
-            Lưu Thay Đổi
-          </Button>
-        </div>
-      </Card>
-
-      {/* KHU VỰC 2: QUẢN LÝ DANH SÁCH */}
       <Card
         title="Danh sách Ủng hộ (Donations)"
         variant="borderless"

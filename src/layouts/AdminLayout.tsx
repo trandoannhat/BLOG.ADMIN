@@ -1,6 +1,7 @@
 // https://nhatdev.top
 // src/layouts/AdminLayout.tsx
-import { Layout, Menu, Button, theme } from "antd";
+import { Layout, Menu, Button, theme, Dropdown, Avatar, Space } from "antd";
+import type { MenuProps } from "antd"; // 👈 THÊM: Import type MenuProps của Ant Design
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -9,7 +10,9 @@ import {
   LogoutOutlined,
   AppstoreOutlined,
   EditOutlined,
-  HeartOutlined, // <--- THÊM IMPORT ICON TRÁI TIM CHO DONATE
+  HeartOutlined,
+  UserOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
@@ -32,7 +35,17 @@ const AdminLayout = () => {
     navigate("/login");
   };
 
-  // Định nghĩa menu items với Link (Chuẩn UX Admin)
+  // 👇 THÊM: Hàm xử lý điều hướng khi bấm vào Dropdown Menu
+  const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "logout") {
+      handleLogout();
+    } else {
+      // Chuyển hướng đến /profile hoặc /settings
+      navigate(`/${key}`);
+    }
+  };
+
+  // 1. Menu bên trái (Sidebar)
   const menuItems = [
     {
       key: "/",
@@ -54,11 +67,32 @@ const AdminLayout = () => {
       icon: <ProjectOutlined />,
       label: <Link to="/projects">Quản lý Dự án</Link>,
     },
-    // 👇 THÊM MENU DONATE VÀO ĐÂY
     {
       key: "/donations",
       icon: <HeartOutlined />,
       label: <Link to="/donations">Quản lý Ủng hộ</Link>,
+    },
+  ];
+
+  // 2. Menu thả xuống cho User Profile ở góc phải
+  const userDropdownItems: MenuProps["items"] = [
+    {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: "Hồ sơ cá nhân",
+    },
+    {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: "Cài đặt hệ thống",
+    },
+    { type: "divider" },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng xuất",
+      danger: true,
+      // Đã xóa onClick ở đây vì đã đưa lên xử lý chung ở handleUserMenuClick
     },
   ];
 
@@ -73,11 +107,9 @@ const AdminLayout = () => {
         <div className="demo-logo-vertical h-16 flex items-center justify-center text-white font-bold text-xl border-b border-slate-700">
           {collapsed ? "ND" : "NhatDev Admin"}
         </div>
-
         <Menu
           theme="dark"
           mode="inline"
-          // Logic highlight: Lấy đường dẫn hiện tại làm key
           selectedKeys={[location.pathname]}
           items={menuItems}
         />
@@ -86,7 +118,7 @@ const AdminLayout = () => {
       <Layout>
         <Header
           style={{ padding: 0, background: colorBgContainer }}
-          className="flex justify-between items-center pr-6 shadow-sm"
+          className="flex justify-between items-center pr-6 shadow-sm z-10"
         >
           <Button
             type="text"
@@ -95,19 +127,23 @@ const AdminLayout = () => {
             style={{ fontSize: "16px", width: 64, height: 64 }}
           />
 
-          <div className="flex items-center gap-4">
-            <span className="font-semibold text-gray-700">
-              Xin chào, {user?.userName}
-            </span>
-            <Button
-              type="primary"
-              danger
-              icon={<LogoutOutlined />}
-              onClick={handleLogout}
-            >
-              Thoát
-            </Button>
-          </div>
+          {/* 👇 ĐÃ SỬA: Thêm onClick={handleUserMenuClick} vào thuộc tính menu */}
+          <Dropdown
+            menu={{ items: userDropdownItems, onClick: handleUserMenuClick }}
+            placement="bottomRight"
+            arrow
+          >
+            <Space className="cursor-pointer hover:bg-slate-50 px-3 py-1 rounded-md transition-colors">
+              <Avatar
+                src={user?.avatarUrl}
+                icon={!user?.avatarUrl && <UserOutlined />}
+                className="bg-blue-600"
+              />
+              <span className="font-medium text-gray-700 hidden sm:inline-block">
+                {user?.userName || "Admin"}
+              </span>
+            </Space>
+          </Dropdown>
         </Header>
 
         <Content

@@ -23,16 +23,24 @@ const LoginPage = () => {
       // 1. Gọi API
       const response = await authApi.login(values);
 
-      // 2. Kiểm tra kết quả
+      // 2. Kiểm tra kết quả gọi API
       if (response.success && response.data) {
-        message.success("Đăng nhập thành công! 🎉");
+        const userData = response.data;
 
-        // 3. Lưu vào Store (Zustand)
-        // Lưu ý: response.data chứa cả thông tin user và token
-        login(response.data, response.data.jwToken);
+        // 👇 CHỐT CHẶN UX TẠI ĐÂY: Quét xem có quyền Admin không
+        const isAdmin = userData.roles?.includes("Admin");
 
-        // 4. Chuyển hướng vào trang Admin
-        navigate("/", { replace: true });
+        if (isAdmin) {
+          // TRƯỜNG HỢP 1: Đúng là Admin -> Cho vào nhà
+          message.success("Đăng nhập thành công! 🎉");
+          login(userData, userData.jwToken);
+          navigate("/", { replace: true });
+        } else {
+          // TRƯỜNG HỢP 2: Là Client đi lạc -> Cảnh báo lỗi, KHÔNG lưu Zustand
+          setErrorMsg(
+            "Tài khoản của bạn không có quyền truy cập trang quản trị!",
+          );
+        }
       } else {
         setErrorMsg(response.message || "Đăng nhập thất bại");
       }

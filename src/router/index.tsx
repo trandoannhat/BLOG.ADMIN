@@ -3,6 +3,8 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Button, Result } from "antd";
 
+import ProfilePage from "../pages/Profile";
+import SettingsPage from "../pages/Settings";
 // --- IMPORTS ---
 import AuthLayout from "../layouts/AuthLayout";
 import AdminLayout from "../layouts/AdminLayout";
@@ -11,22 +13,55 @@ import ProjectsPage from "../pages/Projects";
 import CategoriesPage from "../pages/Categories";
 import PostsPage from "../pages/Posts";
 import DonationsPage from "../pages/Donations";
-// 👇 BƯỚC 1: IMPORT TRANG DASHBOARD MỚI VÀO ĐÂY
 import DashboardPage from "../pages/Dashboard";
 
+// Import store Zustand
 import { useAuthStore } from "../stores/useAuthStore";
 
 // ==========================================
 // 1. CÁC COMPONENT BẢO VỆ ROUTE (GUARDS)
 // ==========================================
 
-// Bảo vệ trang Admin: Chưa login -> Đá về Login
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, token } = useAuthStore();
+// ✅ THÊM COMPONENT 403 - FORBIDDEN
+const Forbidden = () => {
+  const handleLogout = () => {
+    // Xóa token và bắt buộc đăng nhập lại
+    localStorage.removeItem("auth-storage");
+    window.location.href = "/login";
+  };
 
+  return (
+    <Result
+      status="403"
+      title="403 Không có quyền"
+      subTitle="Khu vực cấm! Tài khoản của bạn không có quyền truy cập trang Quản trị."
+      extra={
+        <Button type="primary" onClick={handleLogout}>
+          Đăng nhập bằng tài khoản Admin
+        </Button>
+      }
+    />
+  );
+};
+
+// 👇 ĐÃ SỬA: Bảo vệ trang Admin (Check cả Đăng nhập & Quyền)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  // Lấy thêm thông tin `user` để check roles
+  const { isAuthenticated, token, user } = useAuthStore();
+
+  // 1. Nếu chưa đăng nhập -> Đá về Login
   if (!isAuthenticated || !token) {
     return <Navigate to="/login" replace />;
   }
+
+  // 2. Nếu đã đăng nhập nhưng KHÔNG CÓ chữ "Admin" trong mảng roles -> Hiện màn hình 403
+  const isAdmin = user?.roles?.includes("Admin");
+
+  if (!isAdmin) {
+    return <Forbidden />;
+  }
+
+  // 3. Đúng là Admin -> Cho vào nhà
   return <>{children}</>;
 };
 
@@ -43,8 +78,6 @@ const RejectedRoute = ({ children }: { children: React.ReactNode }) => {
 // ==========================================
 // 2. TRANG 404
 // ==========================================
-// (Đã xóa cái component Dashboard tạm thời ở đây)
-
 const NotFound = () => (
   <Result
     status="404"
@@ -74,16 +107,14 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        // 👇 BƯỚC 2: GỌI COMPONENT DASHBOARD PAGE RA ĐÂY
         element: <DashboardPage />,
       },
-      {
-        path: "projects",
-        element: <ProjectsPage />,
-      },
+      { path: "projects", element: <ProjectsPage /> },
       { path: "categories", element: <CategoriesPage /> },
       { path: "posts", element: <PostsPage /> },
       { path: "donations", element: <DonationsPage /> },
+      { path: "profile", element: <ProfilePage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
   {
