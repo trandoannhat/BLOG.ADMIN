@@ -217,8 +217,8 @@ export default function DashboardPage() {
               percent={Number(progressPercent.toFixed(1))}
               status="active"
               strokeColor={{ "0%": "#3b82f6", "100%": "#6366f1" }}
-              railColor="#f1f5f9" // Đổi trailColor -> railColor
-              size={[undefined, 20]} // Đổi strokeWidth -> size
+              railColor="#f1f5f9"
+              size={{ height: 20 }} //  TypeScript sẽ không báo lỗi ở đây
             />
           </Card>
         </Col>
