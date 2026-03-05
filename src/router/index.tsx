@@ -18,6 +18,7 @@ import ContactsPage from "../pages/Contacts";
 
 import { useAuthStore } from "../stores/useAuthStore";
 import UsersPage from "../pages/Users";
+import PartnerAdsPage from "../pages/PartnerAds";
 
 // ==========================================
 // 1. CÁC COMPONENT BẢO VỆ ROUTE (GUARDS)
@@ -104,6 +105,7 @@ export const router = createBrowserRouter([
 
       { path: "contacts", element: <ContactsPage /> },
       { path: "users", element: <UsersPage /> },
+      { path: "partner-ads", element: <PartnerAdsPage /> },
     ],
   },
   {

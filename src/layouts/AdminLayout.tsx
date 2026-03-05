@@ -12,7 +12,8 @@ import {
   HeartOutlined,
   UserOutlined,
   SettingOutlined,
-  MailOutlined, // 👈 THÊM: Icon cho Menu Liên hệ
+  MailOutlined,
+  DollarOutlined, // 👈 THÊM: Icon cho Menu Liên hệ
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
@@ -81,6 +82,12 @@ const AdminLayout = () => {
       key: "/users",
       icon: <UserOutlined />,
       label: <Link to="/users">Quản lý người dùng</Link>,
+    },
+    //   Menu Quản lý quang cáo đối tác
+    {
+      key: "/partner-ads",
+      icon: <DollarOutlined />,
+      label: <Link to="/partner-ads">Quản lý quảng cáo</Link>,
     },
   ];
 
