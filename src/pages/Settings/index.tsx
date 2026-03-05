@@ -1,4 +1,3 @@
-// https://nhatdev.top
 // src/pages/Settings/index.tsx
 import { useEffect, useState } from "react";
 import {
@@ -16,6 +15,9 @@ import {
   GithubOutlined,
   MessageOutlined,
   SaveOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { settingApi } from "../../api/adminApi";
 import donationApi from "../../api/donationApi";
@@ -24,6 +26,7 @@ const SettingsPage = () => {
   const [formGeneral] = Form.useForm();
   const [formSocial] = Form.useForm();
   const [formDonate] = Form.useForm();
+  const [formContact] = Form.useForm();
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -41,15 +44,18 @@ const SettingsPage = () => {
 
       // Delay cực ngắn để đảm bảo Tabs đã mount các Form thông qua forceRender
       setTimeout(() => {
-        if (settingsRes?.success && settingsRes?.data) {
+        if (settingsRes?.data) {
+          // Map dữ liệu từ dạng mảng [{key: "...", value: "..."}] sang dạng Object { key: value }
           const dataObj = Array.isArray(settingsRes.data)
             ? settingsRes.data.reduce(
                 (acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }),
                 {},
               )
             : settingsRes.data;
+
           formGeneral.setFieldsValue(dataObj);
           formSocial.setFieldsValue(dataObj);
+          formContact.setFieldsValue(dataObj);
         }
 
         if (donateStatsRes?.data) {
@@ -74,13 +80,16 @@ const SettingsPage = () => {
       }));
 
       const response: any = await settingApi.updateBatch(payload);
-      if (response.success) {
-        message.success("Đã lưu cấu hình hệ thống thành công! 🎉");
-      } else {
-        message.error(response.message || "Lưu cấu hình thất bại!");
-      }
+
+      // Nếu code chạy được đến dòng này -> Khẳng định 100% là HTTP 200 (Thành công)
+      // Lấy câu thông báo từ C# gửi lên (nếu có), không thì dùng câu mặc định
+      message.success(
+        response?.message || "Đã lưu cấu hình hệ thống thành công! 🎉",
+      );
     } catch (error) {
-      message.error("Có lỗi xảy ra khi kết nối máy chủ!");
+      // Bất kỳ lỗi 400, 500 nào đều rơi vào đây.
+      // (Bên axiosClient của bạn đã có đoạn tự động show message.error rồi nên ở đây chỉ cần log)
+      console.error("Lỗi khi lưu cấu hình:", error);
     } finally {
       setLoading(false);
     }
@@ -125,9 +134,6 @@ const SettingsPage = () => {
           <Form.Item label="Tên Website (Tiêu đề SEO)" name="siteName">
             <Input placeholder="VD: NhatDev - Lập trình & Cuộc sống" />
           </Form.Item>
-          <Form.Item label="Email Liên hệ" name="contactEmail">
-            <Input placeholder="Email hiển thị dưới Footer" />
-          </Form.Item>
           <Button
             type="primary"
             htmlType="submit"
@@ -141,6 +147,55 @@ const SettingsPage = () => {
     },
     {
       key: "2",
+      label: "Thông tin liên hệ",
+      forceRender: true,
+      children: (
+        <Form form={formContact} layout="vertical" onFinish={onSaveSettings}>
+          <Form.Item label="Số điện thoại / Hotline" name="ContactPhone">
+            <Input
+              prefix={<PhoneOutlined className="text-gray-400" />}
+              placeholder="VD: 0907.011.886"
+            />
+          </Form.Item>
+
+          <Form.Item label="Email Liên hệ" name="ContactEmail">
+            <Input
+              prefix={<MailOutlined className="text-gray-400" />}
+              placeholder="VD: contact@nhatsoft.com"
+            />
+          </Form.Item>
+
+          <Form.Item label="Địa chỉ / Trụ sở" name="ContactAddress">
+            <Input
+              prefix={<EnvironmentOutlined className="text-gray-400" />}
+              placeholder="VD: TP. Hồ Chí Minh, Việt Nam"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Link Google Map (URL src)"
+            name="ContactMapUrl"
+            tooltip="Lên Google Map -> Chọn địa điểm -> Chia sẻ -> Nhúng bản đồ -> Copy đoạn link bên trong thuộc tính src"
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="https://www.google.com/maps/embed?..."
+            />
+          </Form.Item>
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            icon={<SaveOutlined />}
+          >
+            Lưu Thông tin liên hệ
+          </Button>
+        </Form>
+      ),
+    },
+    {
+      key: "3",
       label: "Mạng xã hội",
       forceRender: true,
       children: (
@@ -175,7 +230,7 @@ const SettingsPage = () => {
       ),
     },
     {
-      key: "3",
+      key: "4",
       label: "Cài đặt Donate",
       forceRender: true,
       children: (
@@ -187,7 +242,7 @@ const SettingsPage = () => {
                 `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
               }
               parser={(value) => value!.replace(/\$\s?|(,*)/g, "") as any}
-              suffix="VNĐ" // Thay addonAfter -> suffix
+              suffix="VNĐ"
               min={1000}
               step={100000}
             />

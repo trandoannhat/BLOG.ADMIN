@@ -1,7 +1,6 @@
-// https://nhatdev.top
 // src/layouts/AdminLayout.tsx
 import { Layout, Menu, Button, theme, Dropdown, Avatar, Space } from "antd";
-import type { MenuProps } from "antd"; // 👈 THÊM: Import type MenuProps của Ant Design
+import type { MenuProps } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -13,6 +12,7 @@ import {
   HeartOutlined,
   UserOutlined,
   SettingOutlined,
+  MailOutlined, // 👈 THÊM: Icon cho Menu Liên hệ
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
@@ -35,12 +35,10 @@ const AdminLayout = () => {
     navigate("/login");
   };
 
-  // 👇 THÊM: Hàm xử lý điều hướng khi bấm vào Dropdown Menu
   const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key === "logout") {
       handleLogout();
     } else {
-      // Chuyển hướng đến /profile hoặc /settings
       navigate(`/${key}`);
     }
   };
@@ -72,6 +70,12 @@ const AdminLayout = () => {
       icon: <HeartOutlined />,
       label: <Link to="/donations">Quản lý Ủng hộ</Link>,
     },
+    // 👇 THÊM: Menu Yêu cầu liên hệ
+    {
+      key: "/contacts",
+      icon: <MailOutlined />,
+      label: <Link to="/contacts">Yêu cầu liên hệ</Link>,
+    },
   ];
 
   // 2. Menu thả xuống cho User Profile ở góc phải
@@ -92,7 +96,6 @@ const AdminLayout = () => {
       icon: <LogoutOutlined />,
       label: "Đăng xuất",
       danger: true,
-      // Đã xóa onClick ở đây vì đã đưa lên xử lý chung ở handleUserMenuClick
     },
   ];
 
@@ -127,7 +130,6 @@ const AdminLayout = () => {
             style={{ fontSize: "16px", width: 64, height: 64 }}
           />
 
-          {/* 👇 ĐÃ SỬA: Thêm onClick={handleUserMenuClick} vào thuộc tính menu */}
           <Dropdown
             menu={{ items: userDropdownItems, onClick: handleUserMenuClick }}
             placement="bottomRight"
