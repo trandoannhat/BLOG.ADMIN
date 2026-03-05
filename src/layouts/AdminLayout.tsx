@@ -70,11 +70,17 @@ const AdminLayout = () => {
       icon: <HeartOutlined />,
       label: <Link to="/donations">Quản lý Ủng hộ</Link>,
     },
-    // 👇 THÊM: Menu Yêu cầu liên hệ
+    //   Menu Yêu cầu liên hệ
     {
       key: "/contacts",
       icon: <MailOutlined />,
       label: <Link to="/contacts">Yêu cầu liên hệ</Link>,
+    },
+    //   Menu Quản lý người dùng
+    {
+      key: "/users",
+      icon: <UserOutlined />,
+      label: <Link to="/users">Quản lý người dùng</Link>,
     },
   ];
 

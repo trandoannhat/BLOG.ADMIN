@@ -17,6 +17,7 @@ import DashboardPage from "../pages/Dashboard";
 import ContactsPage from "../pages/Contacts";
 
 import { useAuthStore } from "../stores/useAuthStore";
+import UsersPage from "../pages/Users";
 
 // ==========================================
 // 1. CÁC COMPONENT BẢO VỆ ROUTE (GUARDS)
@@ -100,8 +101,9 @@ export const router = createBrowserRouter([
       { path: "donations", element: <DonationsPage /> },
       { path: "profile", element: <ProfilePage /> },
       { path: "settings", element: <SettingsPage /> },
-      // 👇 ĐÃ THÊM: Route cho trang quản lý liên hệ
+
       { path: "contacts", element: <ContactsPage /> },
+      { path: "users", element: <UsersPage /> },
     ],
   },
   {

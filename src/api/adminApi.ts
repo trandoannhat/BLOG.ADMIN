@@ -43,3 +43,25 @@ export const settingApi = {
     return axiosClient.post("/SystemSettings/batch", settings);
   },
 };
+// Thêm vào cuối file src/api/adminApi.ts
+export const userManagementApi = {
+  // Lấy danh sách tất cả tài khoản
+  getAllUsers: () => {
+    return axiosClient.get("/Account/users");
+  },
+
+  // Cập nhật quyền (Role). Dữ liệu gửi lên là một con số Enum (0: Admin, 1: Client)
+  updateRole: (id: string, role: number) => {
+    return axiosClient.put(`/Account/users/${id}/role`, role, {
+      headers: { "Content-Type": "application/json" }, // Đảm bảo gửi dạng số nguyên chứ không phải object
+    });
+  },
+
+  // Xóa tài khoản
+  deleteUser: (id: string) => {
+    return axiosClient.delete(`/Account/users/${id}`);
+  },
+  createUser: (data: any) => {
+    return axiosClient.post("/Account/register", data);
+  },
+};
