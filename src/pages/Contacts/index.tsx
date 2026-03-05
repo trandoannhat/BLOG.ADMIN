@@ -33,11 +33,13 @@ const ContactsPage = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // 👇 ĐÃ SỬA: Khai báo rõ ràng status có thể là undefined
   const [filter, setFilter] = useState({
     pageNumber: 1,
     pageSize: 10,
     keyword: "",
-    status: null as number | null,
+    status: undefined as number | undefined,
   });
 
   // State cho Modal Xem & Cập nhật
@@ -207,8 +209,9 @@ const ContactsPage = () => {
             className="w-full sm:w-48"
             placeholder="Lọc theo trạng thái"
             allowClear
+            // 👇 ĐÃ SỬA: Ép kiểu val về undefined nếu val bị rỗng (khi bấm nút Xóa bộ lọc)
             onChange={(val) =>
-              setFilter({ ...filter, status: val, pageNumber: 1 })
+              setFilter({ ...filter, status: val ?? undefined, pageNumber: 1 })
             }
             options={STATUS_OPTIONS}
           />
